@@ -1,0 +1,2 @@
+# keep Windows line endings: this test checks that the input reader handles CRLF
+crlf_beam2d_1.in -text

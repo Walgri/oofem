@@ -160,7 +160,12 @@ OOFEMTXTDataReader :: giveRawLineFromInput(std :: ifstream &stream, int &lineNum
         std :: getline(stream, line);
         if ( !stream ) {
             return false;
-        } if ( line.length() > 0 ) {
+        }
+        // Windows line endings (CRLF): strip the trailing '\r', otherwise it ends up in file names
+        if ( !line.empty() && line.back() == '\r' ) {
+            line.pop_back();
+        }
+        if ( line.length() > 0 ) {
             if ( line.back() == '\\' ) {
                 std :: string continuedLine;
                 do {
@@ -168,6 +173,9 @@ OOFEMTXTDataReader :: giveRawLineFromInput(std :: ifstream &stream, int &lineNum
                     std :: getline(stream, continuedLine);
                     if ( !stream ) {
                         return false;
+                    }
+                    if ( !continuedLine.empty() && continuedLine.back() == '\r' ) {
+                        continuedLine.pop_back();
                     }
                     line.pop_back();
                     line += continuedLine;
