@@ -129,6 +129,7 @@ public:
 protected:
     void computeGaussPoints() override;
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
+    void computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep) override;
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int = 1, int = ALL_STRAINS) override;
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer) override;
     void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;

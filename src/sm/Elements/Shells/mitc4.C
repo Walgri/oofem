@@ -420,6 +420,47 @@ MITC4Shell::computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, T
 }
 
 void
+MITC4Shell::computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep)
+{
+    // Initial stress (geometric) matrix for linear stability.
+    // In-plane stresses (sx, sy, txy) in the element local system, evaluated at every
+    // Gauss point (including through the thickness), with the gradients of the bilinear
+    // shape functions. The contribution is the same for the three local translations
+    // u, v, w; rotations have no contribution.
+    //   KG(i,j) = sum_gp ( dNi/dx sx dNj/dx + dNi/dx txy dNj/dy + dNi/dy txy dNj/dx + dNi/dy sy dNj/dy ) dV
+    answer.resize(24, 24);
+    answer.zero();
+
+    FloatArray strain, stress;
+    for ( auto &gp : * integrationRulesArray [ 0 ] ) {
+        FloatArrayF< 3 >lc = {
+            gp->giveNaturalCoordinate(1),
+            gp->giveNaturalCoordinate(2),
+            gp->giveNaturalCoordinate(3),
+        };
+        auto dn = this->givedNdx(lc);
+        auto &hkx = dn [ 0 ];
+        auto &hky = dn [ 1 ];
+
+        this->computeStrainVector(strain, gp, tStep);
+        this->computeStressVector(stress, strain, gp, tStep);
+        // OOFEM Voigt order: xx, yy, zz, yz, xz, xy
+        double sx = stress.at(1), sy = stress.at(2), txy = stress.at(6);
+        double dV = this->computeVolumeAround(gp);
+
+        for ( int i = 0; i < 4; i++ ) {
+            for ( int j = 0; j < 4; j++ ) {
+                double g = ( hkx [ i ] * sx * hkx [ j ] + hkx [ i ] * txy * hky [ j ] +
+                             hky [ i ] * txy * hkx [ j ] + hky [ i ] * sy * hky [ j ] ) * dV;
+                for ( int k = 1; k <= 3; k++ ) {
+                    answer.at(6 * i + k, 6 * j + k) += g;
+                }
+            }
+        }
+    }
+}
+
+void
 MITC4Shell::giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord)
 {
     // This element adds an additional stiffness for the so called drilling dofs.
