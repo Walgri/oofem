@@ -1,0 +1,30 @@
+dkmqshell_deadweight.out
+Cantilever plate strip 2 x 1 m, t = 0.2 m, rho = 2.5, under self weight (g = 9.81 along -z), clamped at x = 0, 2 DKMQShell elements, DSS solver. Weight W = 9.81: vertical reactions W/2 per clamped node, moment reactions W * 1.0 / 2 per node
+LinearStatic nsteps 1 smtype 8 lstype 4 nmodules 1
+errorcheck
+domain 3dShell
+OutputManager tstep_all dofman_all element_all
+ndofman 6 nelem 2 ncrosssect 1 nmat 1 nbc 2 nic 0 nltf 1 nset 3
+node 1 coords 3 0.0 0.0 0.0
+node 2 coords 3 1.0 0.0 0.0
+node 3 coords 3 2.0 0.0 0.0
+node 4 coords 3 0.0 1.0 0.0
+node 5 coords 3 1.0 1.0 0.0
+node 6 coords 3 2.0 1.0 0.0
+dkmqshell 1 nodes 4 1 2 5 4
+dkmqshell 2 nodes 4 2 3 6 5
+SimpleCS 1 thick 0.2 material 1 set 1
+IsoLE 1 d 2.5 E 3.e7 n 0.2 tAlpha 0.0
+BoundaryCondition 1 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 values 6 0 0 0 0 0 0 set 2
+DeadWeight 2 loadTimeFunction 1 components 6 0.0 0.0 -9.81 0.0 0.0 0.0 set 3
+ConstantFunction 1 f(t) 1.0
+Set 1 elementranges {(1 2)}
+Set 2 nodes 2 1 4
+Set 3 elementranges {(1 2)}
+#
+#%BEGIN_CHECK% tolerance 1.e-6
+#REACTION tStep 1 number 1 dof 3 value 4.905
+#REACTION tStep 1 number 4 dof 3 value 4.905
+#REACTION tStep 1 number 1 dof 5 value -4.905
+#REACTION tStep 1 number 4 dof 5 value -4.905
+#%END_CHECK%

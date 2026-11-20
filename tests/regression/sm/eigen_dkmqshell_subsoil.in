@@ -1,0 +1,40 @@
+eigen_dkmqshell_subsoil.out
+Free square plate 2 x 2 m, t = 0.3 m, on Winkler springs (quad1platesubsoil, c1 = 30000), 2 x 2 DKMQShell mesh, in-plane DOFs fixed. Subsoil elements have no mass. Rigid modes are exact: two rocking modes omega^2 = c1 (4/3) / (rho t 2) = 26666.67 (lumped mass: 2 rho t about each axis), vertical translation omega^2 = c1 / (rho t) = 40000
+EigenValueDynamic nroot 3 rtolv 1.e-10 stype 3 smtype 8 nmodules 1
+errorcheck
+domain 3dShell
+OutputManager tstep_all dofman_all element_all
+ndofman 9 nelem 8 ncrosssect 2 nmat 2 nbc 1 nic 0 nltf 1 nset 4
+node 1 coords 3 0.0 0.0 0.0
+node 2 coords 3 1.0 0.0 0.0
+node 3 coords 3 2.0 0.0 0.0
+node 4 coords 3 0.0 1.0 0.0
+node 5 coords 3 1.0 1.0 0.0
+node 6 coords 3 2.0 1.0 0.0
+node 7 coords 3 0.0 2.0 0.0
+node 8 coords 3 1.0 2.0 0.0
+node 9 coords 3 2.0 2.0 0.0
+dkmqshell 1 nodes 4 1 2 5 4
+dkmqshell 2 nodes 4 2 3 6 5
+dkmqshell 3 nodes 4 4 5 8 7
+dkmqshell 4 nodes 4 5 6 9 8
+quad1platesubsoil 5 nodes 4 1 2 5 4
+quad1platesubsoil 6 nodes 4 2 3 6 5
+quad1platesubsoil 7 nodes 4 4 5 8 7
+quad1platesubsoil 8 nodes 4 5 6 9 8
+SimpleCS 1 thick 0.3 material 1 set 1
+SimpleCS 2 thick 1.0 material 2 set 2
+IsoLE 1 d 2.5 E 3.e7 n 0.2 tAlpha 0.0
+winklerpasternak 2 d 0.0 c1 30000.0 c2 0.0
+BoundaryCondition 1 loadTimeFunction 1 dofs 3 1 2 6 values 3 0.0 0.0 0.0 set 3
+ConstantFunction 1 f(t) 1.0
+Set 1 elementranges {(1 4)}
+Set 2 elementranges {(5 8)}
+Set 3 allNodes
+Set 4 nodes 1 5
+#
+#%BEGIN_CHECK% tolerance 1.e-2
+#EIGVAL tStep 1 EigNum 1 value 2.66666667e+04
+#EIGVAL tStep 1 EigNum 2 value 2.66666667e+04
+#EIGVAL tStep 1 EigNum 3 value 4.00000000e+04
+#%END_CHECK%
