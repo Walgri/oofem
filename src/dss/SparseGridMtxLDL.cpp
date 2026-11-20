@@ -77,7 +77,8 @@ void SparseGridMtxLDL :: LoadZeros()
     long *blockP = this->block_order->perm->Items;
     long *nodeP = this->node_order ? node_order->perm->Items : NULL;
 
-    long neq = n_blocks * block_size - noDummyDOFs;
+    // real equations: with node reordering noDummyDOFs can be overestimated by one block
+    long neq = realNeq;
     for ( long i = 0; i < neq; i++ ) {
         long ni = ( nodeP == NULL ) ? i : nodeP [ i ];
         long si = ni % block_size;
@@ -327,6 +328,23 @@ void SparseGridMtxLDL :: MultiplyByVector(const LargeVectorAttach &x, LargeVecto
         BlockArith->MultDiagonalBlockByVector(Columns_data + bj * block_storage, px + bj * block_size, py + bj * block_size);
     }
 } //MultiplyByVector
+
+void SparseGridMtxLDL :: MultiplyByVectorOrd(const double *px, double *py)
+{
+    // Same as MultiplyByVector, but with the block -> vector position map used by
+    // ForwardSubstL / BackSubstLT (ord = block_order->order), so the product is consistent with Solve.
+    long *ord = block_order->order->Items;
+    for ( long bj = 0; bj < n_blocks; bj++ ) {
+        SparseGridColumn &columnJ = * Columns [ bj ];
+        long cnt = columnJ.Entries;
+        for ( long idx = 0; idx < cnt; idx++ ) {
+            long bi = columnJ.IndexesUfa->Items [ idx ];
+            long block = columnJ.column_start_idx + idx * block_storage;
+            BlockArith->AddMultBlockByVectorSym(Columns_data + block, const_cast< double * >( px ), py, block_size * ord [ bi ], block_size * ord [ bj ]);
+        }
+        BlockArith->MultDiagonalBlockByVector(Columns_data + bj * block_storage, const_cast< double * >( px ) + block_size * ord [ bj ], py + block_size * ord [ bj ]);
+    }
+}
 
 void SparseGridMtxLDL :: times(double x) {
 //     long neq = n_blocks * block_size - noDummyDOFs;
