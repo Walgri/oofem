@@ -89,6 +89,9 @@ public:
     double computeVolumeAround(GaussPoint *gp) override;
 
     void computeLumpedMassMatrix(FloatMatrix &answer, TimeStep *tStep) override;
+    /// Subsoil spring: no initial stress matrix (second order, stability)
+    void computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep) override
+    { answer.resize(this->computeNumberOfDofs(), this->computeNumberOfDofs()); answer.zero(); }
     void computeMassMatrix(FloatMatrix &answer, TimeStep *tStep) override
     { computeLumpedMassMatrix(answer, tStep); }
     void giveInternalForcesVector(FloatArray &answer,
