@@ -147,6 +147,49 @@ TR_SHELL01 :: giveCharacteristicMatrix(FloatMatrix &answer, CharType mtrx, TimeS
     if ( aux.isNotEmpty() ) answer.assemble(aux, loc_membrane);
 }
 
+void
+TR_SHELL01 :: computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep)
+{
+    // Initial stress (geometric) matrix for linear stability.
+    // Membrane stresses (sx, sy, txy) at the membrane Gauss points, in the local system;
+    // gradients of the linear triangle shape functions; same contribution for the local
+    // translations u, v, w of each node. Local DOF order per node: u v w rx ry rz.
+    answer.resize(18, 18);
+    answer.zero();
+
+    Coordinates x, y;
+    membrane->giveNodeCoordinates(x, y);
+    double b [ 3 ], c [ 3 ];
+    for ( int i = 0; i < 3; i++ ) {
+        int j = ( i + 1 ) % 3, k = ( i + 2 ) % 3;
+        b [ i ] = y [ j ] - y [ k ];
+        c [ i ] = x [ k ] - x [ j ];
+    }
+    double area2 = x [ 0 ] * b [ 0 ] + x [ 1 ] * b [ 1 ] + x [ 2 ] * b [ 2 ]; // twice the area
+    double dndx [ 3 ], dndy [ 3 ];
+    for ( int i = 0; i < 3; i++ ) {
+        dndx [ i ] = b [ i ] / area2;
+        dndy [ i ] = c [ i ] / area2;
+    }
+
+    FloatArray strain, stress;
+    for ( auto &gp : * membrane->giveDefaultIntegrationRulePtr() ) {
+        membrane->computeStrainVector(strain, gp, tStep);
+        membrane->computeStressVector(stress, strain, gp, tStep);
+        double sx = stress.at(1), sy = stress.at(2), txy = stress.at(3);
+        double dV = membrane->computeVolumeAround(gp);   // includes the thickness
+        for ( int i = 0; i < 3; i++ ) {
+            for ( int j = 0; j < 3; j++ ) {
+                double g = ( dndx [ i ] * sx * dndx [ j ] + dndx [ i ] * txy * dndy [ j ] +
+                             dndy [ i ] * txy * dndx [ j ] + dndy [ i ] * sy * dndy [ j ] ) * dV;
+                for ( int k = 1; k <= 3; k++ ) {
+                    answer.at(6 * i + k, 6 * j + k) += g;
+                }
+            }
+        }
+    }
+}
+
 void TR_SHELL01 :: computeBodyLoadVectorAt(FloatArray &answer, Load *forLoad, TimeStep *tStep, ValueModeType mode)
 {
   FloatArray aux;

@@ -89,6 +89,7 @@ public:
 
     void giveCharacteristicVector(FloatArray &answer, CharType mtrx, ValueModeType mode, TimeStep *tStep) override;
     void giveCharacteristicMatrix(FloatMatrix &answer, CharType mtrx, TimeStep *tStep) override;
+    void computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep) override;
     double computeVolumeAround(GaussPoint *gp) override;
     bool giveRotationMatrix(FloatMatrix &answer) override;
 
