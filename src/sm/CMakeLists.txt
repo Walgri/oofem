@@ -24,6 +24,7 @@ set (sm_emodel
     EngineeringModels/nlinearstatic.C
     EngineeringModels/nlineardynamic.C
     EngineeringModels/eigenvaluedynamic.C
+    EngineeringModels/responsespectrum.C
     EngineeringModels/linearstability.C
     EngineeringModels/adaptlinearstatic.C
     EngineeringModels/adaptnlinearstatic.C

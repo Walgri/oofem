@@ -1,0 +1,37 @@
+responsespectrum01.out
+Cantilever column with a lumped mass on top (single degree of freedom oscillator), constant spectrum Sa = 2
+ResponseSpectrum nroot 2 rtolv 1e-8 smtype 0 lstype 0 spectrumperiods 2 0.0 10.0 spectrumvalues 2 2.0 2.0 directions 2 1 2 modalcombination 0
+domain 3dShell
+OutputManager tstep_all dofman_all element_all
+ndofman 12 nelem 11 ncrosssect 1 nmat 1 nbc 2 nic 0 nltf 1 nset 3
+node 1 coords 3 0.0 0.0 0.000000
+node 2 coords 3 0.0 0.0 0.300000
+node 3 coords 3 0.0 0.0 0.600000
+node 4 coords 3 0.0 0.0 0.900000
+node 5 coords 3 0.0 0.0 1.200000
+node 6 coords 3 0.0 0.0 1.500000
+node 7 coords 3 0.0 0.0 1.800000
+node 8 coords 3 0.0 0.0 2.100000
+node 9 coords 3 0.0 0.0 2.400000
+node 10 coords 3 0.0 0.0 2.700000
+node 11 coords 3 0.0 0.0 3.000000
+node 99 coords 3 1.0 0.0 0.0
+beam3d 1 nodes 2 1 2 refnode 99
+beam3d 2 nodes 2 2 3 refnode 99
+beam3d 3 nodes 2 3 4 refnode 99
+beam3d 4 nodes 2 4 5 refnode 99
+beam3d 5 nodes 2 5 6 refnode 99
+beam3d 6 nodes 2 6 7 refnode 99
+beam3d 7 nodes 2 7 8 refnode 99
+beam3d 8 nodes 2 8 9 refnode 99
+beam3d 9 nodes 2 9 10 refnode 99
+beam3d 10 nodes 2 10 11 refnode 99
+lumpedmass 11 nodes 1 11 components 3 10.0 10.0 10.0 dofs 3 1 2 3 crossSect 1
+SimpleCS 1 area 0.09 iy 6.75e-4 iz 6.75e-4 ik 1.14e-3 shearareay 1e3 shearareaz 1e3 material 1 set 1
+IsoLE 1 d 0 E 3e7 n 0.2 tAlpha 0.0
+BoundaryCondition 1 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 values 6 0 0 0 0 0 0 set 2
+NodalLoad 2 loadTimeFunction 1 dofs 1 3 Components 1 -0 set 3
+ConstantFunction 1 f(t) 1.0
+Set 1 elementranges {(1 10)}
+Set 2 nodes 1 1
+Set 3 nodes 1 11
