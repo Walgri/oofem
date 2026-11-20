@@ -17,6 +17,7 @@ set (dss
     # OOFEM binding:
     dssmatrix.C
     dsssolver.C
+    lanczossturm.C
     )
 
 add_library (dss
