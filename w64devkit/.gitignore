@@ -1,0 +1,9 @@
+# build products of the w64devkit Makefile
+obj/
+objects.txt
+oofem
+oofem.exe
+# test runner
+tests_scratch/
+tests_passed.txt
+tests_failed.txt
