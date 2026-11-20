@@ -34,6 +34,7 @@
 
 #ifndef _DSSOLVER_H__
 #define _DSSOLVER_H__
+#include <vector>
 
 #include "DSSAfx.h"
 #include "SparseConectivityMtx.h"
@@ -282,6 +283,18 @@ public:
 
     // c = A * b
     void MulMatrixByVector(double *b, double *c) override;
+
+    // --- support for the Lanczos eigenvalue solver with Sturm sequence check ---
+    /// y = A x with the matrix not yet factorized; vectors in equation numbering
+    void MulBlockMatrixByVector(const double *x, double *y);
+    /// Number of negative pivots of the LDL^T factorization (inertia), after factorization
+    long CountNegativePivots();
+    /// A += s * B, B with the same structure (same numbering and blocks), before factorization
+    bool AddScaledValues(double s, DSSolver &B);
+    /// Saves and restores the values before factorization
+    void SaveValues();
+    bool RestoreValues();
+    std :: vector< double > savedValues;
 
     int PreCG(double *b, double *x, double epsilon, int max_iter) override;
 

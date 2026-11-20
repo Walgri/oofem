@@ -52,6 +52,7 @@ SparseGridMtx :: SparseGridMtx(SparseMatrixF &sm, long block_size, Ordering *blo
     this->n_blocks = ( long ) sm.neq / block_size + ( ( ( sm.neq % block_size ) == 0 ) ? 0 : 1 );
     this->n = ( blockP == NULL ) ? ( long ) sm.neq : n_blocks * block_size;
     this->noDummyDOFs = n_blocks * block_size - ( long ) sm.neq;
+    this->realNeq = ( long ) sm.neq;
     this->block_storage = block_size * block_size;
 
     this->BlockArith = DenseMatrixArithmetics :: NewArithmetics(block_size);
@@ -83,6 +84,7 @@ SparseGridMtx :: SparseGridMtx(SparseMatrixF &sm, long block_size, Ordering *blo
 
     this->n = ( blockP == NULL ) ? ( long ) sm.neq : n_blocks * block_size;
     this->noDummyDOFs = n_blocks * block_size - ( long ) sm.neq;
+    this->realNeq = ( long ) sm.neq;
     this->block_storage = block_size * block_size;
 
     this->BlockArith = DenseMatrixArithmetics :: NewArithmetics(block_size);

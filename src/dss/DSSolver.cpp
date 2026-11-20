@@ -33,6 +33,9 @@
  */
 
 #include "DSSolver.h"
+#include "SparseGridMtxLDL.h"
+#include <vector>
+#include <algorithm>
 #include "SparseGridMtxLU.h"
 #include "SparseGridMtxLL.h"
 #include "SkyLineMtxLDL.h"
@@ -1176,5 +1179,114 @@ int DSSolver :: CG(double *b_, double *x_, double epsilon, int max_iter)
 
 
 
+
+
+// ---------------------------------------------------------------------------------------------
+// Support for the eigenvalue solver (Lanczos with Sturm sequence check)
+// ---------------------------------------------------------------------------------------------
+void DSSolver :: MulBlockMatrixByVector(const double *x, double *y)
+{
+    long nn = n_blocks * blockSize;
+    std :: vector< double > a(nn, 0.0), b(nn, 0.0);
+    if ( mcn ) {
+        long *perm = mcn->perm->Items;
+        for ( long i = 0; i < neq; i++ ) {
+            a [ perm [ i ] ] = x [ i ];
+        }
+    } else {
+        for ( long i = 0; i < neq; i++ ) {
+            a [ i ] = x [ i ];
+        }
+    }
+    SparseGridMtxLDL *ml = dynamic_cast< SparseGridMtxLDL * >( matrix );
+    if ( ml ) {
+        ml->MultiplyByVectorOrd(a.data(), b.data());
+    } else {
+        LargeVectorAttach va(nn, a.data());
+        LargeVectorAttach vb(nn, b.data());
+        matrix->MultiplyByVector(va, vb);
+    }
+    if ( mcn ) {
+        long *perm = mcn->perm->Items;
+        for ( long i = 0; i < neq; i++ ) {
+            y [ i ] = b [ perm [ i ] ];
+        }
+    } else {
+        for ( long i = 0; i < neq; i++ ) {
+            y [ i ] = b [ i ];
+        }
+    }
+}
+
+long DSSolver :: CountNegativePivots()
+{
+    SparseGridMtxLDL *m = dynamic_cast< SparseGridMtxLDL * >( matrix );
+    if ( !m ) {
+        return -1;
+    }
+    long bs = m->block_size, st = m->block_storage, nb = m->N_blocks();
+    // Padding rows (blocks filled up to block_size) are not real equations:
+    // only positions that map to an equation (image of mcn->perm) are counted.
+    std :: vector< char > isReal(nb * bs, 0);
+    if ( mcn ) {
+        long *perm = mcn->perm->Items;
+        for ( long i = 0; i < neq; i++ ) {
+            isReal [ perm [ i ] ] = 1;
+        }
+    } else {
+        for ( long i = 0; i < neq && i < nb * bs; i++ ) {
+            isReal [ i ] = 1;
+        }
+    }
+    long *ord = m->block_order->order->Items;
+    long neg = 0;
+    for ( long bj = 0; bj < nb; bj++ ) {
+        for ( long si = 0; si < bs; si++ ) {
+            // after LDL_Decomposition the diagonal block holds 1/d on its diagonal: same sign as d
+            if ( isReal [ bs * ord [ bj ] + si ] && m->Columns_data [ bj * st + si + si * bs ] < 0.0 ) {
+                neg++;
+            }
+        }
+    }
+    return neg;
+}
+
+bool DSSolver :: AddScaledValues(double s, DSSolver &B)
+{
+    SparseGridMtxLDL *ma = dynamic_cast< SparseGridMtxLDL * >( matrix );
+    SparseGridMtxLDL *mb = dynamic_cast< SparseGridMtxLDL * >( B.matrix );
+    if ( !ma || !mb || ma->columns_data_length != mb->columns_data_length || n_blocks != B.n_blocks ) {
+        return false;
+    }
+    if ( mcn && B.mcn ) {
+        for ( long i = 0; i < neq; i++ ) {
+            if ( mcn->perm->Items [ i ] != B.mcn->perm->Items [ i ] ) {
+                return false;
+            }
+        }
+    }
+    for ( long i = 0; i < ma->columns_data_length; i++ ) {
+        ma->Columns_data [ i ] += s * mb->Columns_data [ i ];
+    }
+    return true;
+}
+
+void DSSolver :: SaveValues()
+{
+    SparseGridMtxLDL *m = dynamic_cast< SparseGridMtxLDL * >( matrix );
+    if ( m ) {
+        savedValues.assign(m->Columns_data, m->Columns_data + m->columns_data_length);
+    }
+}
+
+bool DSSolver :: RestoreValues()
+{
+    SparseGridMtxLDL *m = dynamic_cast< SparseGridMtxLDL * >( matrix );
+    if ( !m || ( long ) savedValues.size() != m->columns_data_length ) {
+        return false;
+    }
+    std :: copy(savedValues.begin(), savedValues.end(), m->Columns_data);
+    return true;
+}
 
 DSS_NAMESPASE_END
