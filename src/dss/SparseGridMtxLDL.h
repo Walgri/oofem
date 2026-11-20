@@ -111,6 +111,8 @@ public:
     virtual void LoadMatrixNumbers(SparseMatrixF &sm) override;
     virtual void SolveLV(const LargeVector &b, LargeVector &x) override;
     virtual void MultiplyByVector(const LargeVectorAttach &x, LargeVectorAttach &y) override;
+    /// y = A x in the vector numbering used by Solve (blocks reordered by block_order->order)
+    void MultiplyByVectorOrd(const double *px, double *py);
     virtual void times(double x) override;
     
     virtual void Factorize() override;
