@@ -127,7 +127,8 @@ void SparseGridMtxLL :: LoadZeros()
     long *blockP = this->block_order->perm->Items;
     long *nodeP = this->node_order ? node_order->perm->Items : NULL;
 
-    long neq = n_blocks * block_size - noDummyDOFs;
+    // real equations: with node reordering noDummyDOFs can be overestimated by one block
+    long neq = realNeq;
     for ( long i = 0; i < neq; i++ ) {
         long ni = ( nodeP == NULL ) ? i : nodeP [ i ];
         long si = ni % block_size;

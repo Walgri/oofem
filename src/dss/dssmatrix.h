@@ -42,6 +42,7 @@
 #include "SparseMatrixF.h"
 
 #include <memory>
+#include <vector>
 
 #define _IFT_DSSMatrix_Name "dss"
 
@@ -108,6 +109,19 @@ public:
     double at(int i, int j) const override;
     SparseMtrxType giveType() const override { return SMT_SymCompCol; }
     bool isAsymmetric() const override { return false; }
+
+    // --- support for the Lanczos eigenvalue solver with Sturm sequence check ---
+    /// Number of negative pivots after factorization (inertia)
+    long countNegativePivots();
+    /// Compact copy (CSC, lower triangle with diagonal) of the current values,
+    /// used for matrix-vector products without traversing the factorization fill-in.
+    void extractCompressed(std :: vector< unsigned long > &colptr, std :: vector< unsigned long > &rowind, std :: vector< double > &val);
+    /// this += s * B (same structure), before factorization
+    bool addScaled(double s, DSSMatrix &B);
+    /// Saves the values before factorization and restores them (matrix becomes unfactorized)
+    void saveValues();
+    bool restoreValues();
+    bool giveIsFactorized() const { return isFactorized; }
 
     const char *giveClassName() const override { return "DSSMatrix"; }
 };
