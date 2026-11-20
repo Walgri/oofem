@@ -1,0 +1,107 @@
+patch_dkmqshell.out
+"Patch test of DKMQShell elements (ITW membrane + DKMQ plate), pure bending in y and pure twist (the shear block is computed but not checked)"
+StaticStructural nsteps 1 nmodules 1
+errorcheck
+domain 3dshell
+OutputManager tstep_all dofman_all element_all
+ndofman 24 nelem 15 ncrosssect 1 nmat 1 nbc 7 nic 0 nltf 1 nset 8
+# pure bending along y axis
+node 1 coords 3  0.0  4.0  0.0
+node 2 coords 3  0.0  0.0  0.0
+node 3 coords 3  1.6  2.8  0.0
+node 4 coords 3  0.8  0.8  0.0
+node 5 coords 3  3.2  2.8  0.0
+node 6 coords 3  3.2  1.2  0.0
+node 7 coords 3  4.0  4.0  0.0
+node 8 coords 3  4.0  0.0  0.0
+# (the pure shear case of patch_mitc4.in is not used: with all nodal rotations fixed the
+#  DKMQ edge rotation bubbles still produce curvature, so it is not a constant shear state)
+node 11 coords 3  10.0  4.0  0.0
+node 12 coords 3  10.0  0.0  0.0
+node 13 coords 3  11.6  2.8  0.0
+node 14 coords 3  10.8  0.8  0.0
+node 15 coords 3  13.2  2.8  0.0
+node 16 coords 3  13.2  1.2  0.0
+node 17 coords 3  14.0  4.0  0.0
+node 18 coords 3  14.0  0.0  0.0
+# pure twist
+node 21 coords 3  20.0  4.0  0.0
+node 22 coords 3  20.0  0.0  0.0
+node 23 coords 3  21.6  2.8  0.0
+node 24 coords 3  20.8  0.8  0.0
+node 25 coords 3  23.2  2.8  0.0
+node 26 coords 3  23.2  1.2  0.0
+node 27 coords 3  24.0  4.0  0.0
+node 28 coords 3  24.0  0.0  0.0
+##
+dkmqshell 1 nodes 4 2 4 3 1
+dkmqshell 2 nodes 4 2 8 6 4
+dkmqshell 3 nodes 4 4 6 5 3
+dkmqshell 4 nodes 4 3 5 7 1
+dkmqshell 5 nodes 4 5 6 8 7
+dkmqshell 11 nodes 4 12 14 13 11
+dkmqshell 12 nodes 4 12 18 16 14
+dkmqshell 13 nodes 4 14 16 15 13
+dkmqshell 14 nodes 4 13 15 17 11
+dkmqshell 15 nodes 4 15 16 18 17
+dkmqshell 21 nodes 4 22 24 23 21
+dkmqshell 22 nodes 4 22 28 26 24
+dkmqshell 23 nodes 4 24 26 25 23
+dkmqshell 24 nodes 4 23 25 27 21
+dkmqshell 25 nodes 4 25 26 28 27
+SimpleCS 1 thick 0.1 material 1 set 1
+IsoLE 1 d 2500.  E 15.0  n 0.25 tAlpha 0.000012
+BoundaryCondition 1 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 values 6 0 0 0 0 0 0 set 4
+# BoundaryCondition 2 loadTimeFunction 1 dofs 2 4 6 values 2 0 0 set 5
+BoundaryCondition 2 loadTimeFunction 1 dofs 1 4 values 1 0 set 5
+# BoundaryCondition 3 loadTimeFunction 1 dofs 5 1 2 4 5 6 values 5 0 0 0 0 0 set 6
+BoundaryCondition 3 loadTimeFunction 1 dofs 4 1 2 4 5 values 4 0 0 0 0 set 6
+BoundaryCondition 4 loadTimeFunction 1 dofs 4 1 2 3 6 values 4 0 0 0 0 set 7
+# BoundaryCondition 5 loadTimeFunction 1 dofs 3 1 2 6 values 3 0 0 0 set 8
+BoundaryCondition 5 loadTimeFunction 1 dofs 2 1 2 values 2 0 0 set 8
+NodalLoad 6 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 Components 6 0 0 0.0 0.0 -2.5 0 set 2
+NodalLoad 7 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 Components 6 0 0 5.0 0.0 0.0 0 set 3
+ConstantFunction 1 f(t) 1.0
+Set 1 elementranges {(1 5) (11 15) (21 25)}
+Set 2 nodes 2 7 8
+Set 3 nodes 3 17 18 27
+Set 4 nodes 4 1 2 11 12
+Set 5 nodes 6 3 4 5 6 7 8
+Set 6 nodes 6 13 14 15 16 17 18
+Set 7 nodes 3 21 22 28
+Set 8 nodes 5 23 24 25 26 27
+#
+#
+#
+#
+#%BEGIN_CHECK% tolerance 5.e-3
+## pure bending: exact (M = 1.25 per unit width, w = 7500 at the free edge)
+#REACTION tStep 1 number 1 dof 4 value 0.625
+#REACTION tStep 1 number 1 dof 5 value 2.5
+#REACTION tStep 1 number 2 dof 4 value -0.625
+#REACTION tStep 1 number 2 dof 5 value 2.5
+#REACTION tStep 1 number 7 dof 4 value 0.625
+#REACTION tStep 1 number 8 dof 4 value -0.625
+#NODE tStep 1 number 7 dof 3 unknown d value 7.50000000e+03
+#NODE tStep 1 number 7 dof 5 unknown d value -3.75000000e+03
+#NODE tStep 1 number 8 dof 3 unknown d value 7.50000000e+03
+#NODE tStep 1 number 8 dof 5 unknown d value -3.75000000e+03
+## moments at the centroid, element local axes (e1 = -Y, e2 = X): Mx = nu M, My = -M, Mxy = 0
+#ELEMENT tStep 1 number 5 gp 1 keyword 9 component 1 value -0.3125
+#ELEMENT tStep 1 number 5 gp 1 keyword 9 component 2 value -1.25
+#ELEMENT tStep 1 number 5 gp 1 keyword 9 component 6 value 0.0
+##
+## pure twist: corner reactions exact; Mxy = 2.5 (exact); nodal values within 0.05% of the
+## Kirchhoff solution w = 2500 x y (thick plate, distorted mesh)
+#REACTION tStep 1 number 21 dof 3 value -5.0
+#REACTION tStep 1 number 22 dof 3 value 5.0
+#REACTION tStep 1 number 28 dof 3 value -5.0
+#ELEMENT tStep 1 number 25 gp 1 keyword 9 component 6 value 2.49958 tolerance 1.e-4
+#NODE tStep 1 number 21 dof 4 unknown d value 3.70003870e+00 tolerance 1.e-4
+#NODE tStep 1 number 21 dof 5 unknown d value -9.99673404e+03 tolerance 1.e-2
+#NODE tStep 1 number 27 dof 3 unknown d value 4.00000586e+04 tolerance 1.e-2
+#NODE tStep 1 number 27 dof 4 unknown d value 9.99658734e+03 tolerance 1.e-2
+#NODE tStep 1 number 27 dof 5 unknown d value -9.99614979e+03 tolerance 1.e-2
+#NODE tStep 1 number 28 dof 4 unknown d value 9.99660660e+03 tolerance 1.e-2
+#NODE tStep 1 number 28 dof 5 unknown d value -4.27820503e+00 tolerance 1.e-4
+#%END_CHECK%

@@ -58,6 +58,8 @@ set (sm_element
     Shells/shell7basexfem.C
     Shells/tr2shell7xfem.C
     Shells/mitc4.C
+    Shells/dkmshell.C
+    Shells/dkmshellkernel.c
     Axisymmetry/q4axisymm.C
     Axisymmetry/axisymm3d.C 
     Axisymmetry/l4axisymm.C
