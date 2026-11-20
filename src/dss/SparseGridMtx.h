@@ -80,6 +80,8 @@ protected:
     long n_blocks;
 
     long noDummyDOFs;
+    /// True number of equations (sm.neq): with node reordering noDummyDOFs can count one block too many
+    long realNeq = 0;
 
     long nonzeros;
     long blocks;
