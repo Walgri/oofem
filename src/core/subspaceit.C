@@ -35,6 +35,9 @@
 //#define DETAILED_REPORT
 
 #include "subspaceit.h"
+#include "skyline.h"
+#include <cstdlib>
+#include <memory>
 #include "engngm.h"
 #include "domain.h"
 #include "floatmatrix.h"
@@ -73,7 +76,17 @@ SubspaceIteration :: solve(SparseMtrx &a, SparseMtrx &b, FloatArray &_eigv, Floa
     ConvergedReason status = CR_UNKNOWN;
 
     GJacobi mtd(domain, engngModel);
+    // Optional Sturm sequence check (environment variable OOFEM_STURM): copies of K and M are kept
+    // before factorization, to count the eigenvalues below the shift sigma at the end.
+    std :: unique_ptr< SparseMtrx > sturmK, sturmM;
+    if ( getenv("OOFEM_STURM") ) {
+        sturmK = a.clone();
+        sturmM = b.clone();
+    }
     int nc = min(2 * nroot, nroot + 8);
+    if ( getenv("OOFEM_SUBSPACE_EXTRA") ) {
+        nc = nroot + atoi( getenv("OOFEM_SUBSPACE_EXTRA") );
+    }
     int nn = a.giveNumberOfColumns();
     if ( nc > nn ) {
         nc = nn;
@@ -376,6 +389,36 @@ label400:
     }
 
     // one cad add a normalization of eigen-vectors here
+
+    if ( sturmK ) {
+        // sigma between the last requested eigenvalue and the next approximate one
+        double lp = eigv.at(nroot);
+        double sigma = lp * ( 1.0 + 1.e-6 );
+        if ( nc > nroot && eigv.at(nroot + 1) > lp ) {
+            sigma = 0.5 * ( lp + eigv.at(nroot + 1) );
+        }
+        int found = 0;
+        for ( int i = 1; i <= nc; i++ ) {
+            if ( eigv.at(i) < sigma ) {
+                found++;
+            }
+        }
+        Skyline *ks = dynamic_cast< Skyline * >( sturmK.get() );
+        if ( ks ) {
+            ks->add(-sigma, * sturmM);
+            ks->factorized();
+            int negative = 0;
+            for ( int i = 1; i <= nn; i++ ) {
+                if ( ks->at(i, i) < 0.0 ) {
+                    negative++;
+                }
+            }
+            OOFEM_LOG_INFO("Sturm check: sigma = %.10e, eigenvalues below sigma = %d, found = %d, requested = %d -> %s\n",
+                           sigma, negative, found, nroot, negative == found ? "complete" : "MISSING MODES");
+        } else {
+            OOFEM_LOG_INFO("Sturm check: available only with skyline matrix (smtype 0)\n");
+        }
+    }
 
     // initialize original index locations
     _r.resize(nn, nroot);
