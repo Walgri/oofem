@@ -42,7 +42,8 @@ namespace oofem {
 enum GenEigvalSolverType {
     GES_SubspaceIt,
     GES_InverseIt,
-    GES_SLEPc
+    GES_SLEPc,
+    GES_LanczosSturm   ///< Shift-invert Lanczos with Sturm sequence check (DSS module)
 };
 } // end namespace oofem
 #endif // geneigvalsolvertype_h
